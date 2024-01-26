@@ -1,0 +1,63 @@
+version: '3'
+services:
+  selenium-hub-Automation:
+    build: .
+    ports:
+      - "4442:4442"
+      - "4443:4443"
+      - "4444:4444"
+      - "6900:5900"
+      - "6901:5900"
+      - "6902:5900"
+      - "6080:80"
+    shm_size: 2gb
+    links:
+      - chrome
+      - edge
+      - firefox
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - DEBUG=true
+      - VNC_RESOLUTION=1920x1080
+
+  chrome:
+    image: selenium/node-chrome:latest
+    shm_size: 2gb
+    links:
+      - selenium-hub-Automation
+    environment:
+      - SE_EVENT_BUS_HOST=selenium-hub-Automation
+      - SE_EVENT_BUS_PUBLISH_PORT=4442
+      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+      - DEBUG=true
+
+#  edge:
+#    image: selenium/node-edge:latest
+#    shm_size: 2gb
+#    links:
+#      - selenium-hub-Automation
+#    environment:
+#      - SE_EVENT_BUS_HOST=selenium-hub-Automation
+#      - SE_EVENT_BUS_PUBLISH_PORT=4442
+#      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+#      - DEBUG=true
+#
+#  firefox:
+#    image: selenium/node-firefox:latest
+#    shm_size: 2gb
+#    links:
+#      - selenium-hub-Automation
+#    environment:
+#      - SE_EVENT_BUS_HOST=selenium-hub-Automation
+#      - SE_EVENT_BUS_PUBLISH_PORT=4442
+#      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+#      - DEBUG=true
+
+  novnc:
+    image: dorowu/ubuntu-desktop-lxde-vnc
+    links:
+      - selenium-hub-Automation
+    environment:
+      - VNC_RESOLUTION=1920x1080
