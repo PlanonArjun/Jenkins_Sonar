@@ -1,0 +1,49 @@
+name: Docker Push
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up JDK and Maven
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+      
+      - name: Build and Test
+        run: mvn -B verify --file pom.xml
+      
+      - name: Security Scan
+        run: mvn -B clean install && curl -L https://raw.githubusercontent.com/awslabs/git-secrets/v1.3.0/git-secrets -o git-secrets && chmod +x git-secrets && ./git-secrets scan
+      
+  docker-push:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Docker
+        uses: docker/setup-docker@v2
+
+      - name: Load Docker image
+        run: docker load --input "${{ github.workspace }}/${{ env.BITBUCKET_REPO_SLUG }}.tar"
+
+      - name: Push image to Docker Hub
+        run: |
+          echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
+          IMAGE_NAME=${{ env.BITBUCKET_REPO_SLUG }}
+          VERSION="prod-0.1.${{ github.run_number }}"
+          IMAGE=${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BITBUCKET_REPO_SLUG }}
+          docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
+          docker push "${IMAGE}:${VERSION}"
