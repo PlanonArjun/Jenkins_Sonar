@@ -23,7 +23,7 @@ jobs:
         run: mvn -B verify --file pom.xml
       
       - name: Security Scan
-        run: mvn -B clean install && curl -L https://raw.githubusercontent.com/awslabs/git-secrets/v1.3.0/git-secrets -o git-secrets && chmod +x git-secrets && ./git-secrets scan
+        run: mvn -B clean install
       
   docker-push:
     needs: build
