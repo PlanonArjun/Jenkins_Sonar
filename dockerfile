@@ -1,16 +1,15 @@
-version: '3'
-services:
-  chromgrid:
-    image: selenium/standalone-chrome:latest
-    container_name: chromgrid
-    ports:
-      - "4445:4444"
-      shm_size: "2g"
+#FROM openjdk:17
+#EXPOSE 8080
+#COPY Automation-Framework-0.0.1-SNAPSHOT.jar /app/Automation-Framework-0.0.1-SNAPSHOT.jar
+#ENTRYPOINT ["java", "-jar", "/app/Automation-Framework-0.0.1-SNAPSHOT.jar"]
 
-  edgegrid:
-    image: selenium/standalone-edge:latest
-    container_name: edgegrid
-    ports:
-      - "4447:4444"
-      - "7903:7900"
-    shm_size: "2g"
+FROM maven:3.8.4-openjdk-17-slim as maven
+COPY ./pom.xml ./pom.xml
+COPY ./src ./src
+RUN mvn dependency:go-offline -B
+RUN mvn package
+FROM openjdk:17
+EXPOSE 8080
+WORKDIR /automation-framework
+COPY --from=maven target/Automation-Framework-0.0.1-SNAPSHOT.jar /app/Automation-Framework-0.0.1-SNAPSHOT.jar
+ENTRYPOINT ["java", "-jar", "/app/Automation-Framework-0.0.1-SNAPSHOT.jar"]
