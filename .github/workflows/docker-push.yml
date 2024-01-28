@@ -37,13 +37,13 @@ jobs:
         uses: docker/setup-docker@v2
 
       - name: Load Docker image
-        run: docker load --input "${{ github.workspace }}/${{ env.BITBUCKET_REPO_SLUG }}.tar"
+        run: docker load --input "${{ github.workspace }}/${{ secrets.BITBUCKET_REPO_SLUG }}.tar"
 
       - name: Push image to Docker Hub
         run: |
-          echo $DOCKERHUB_PASSWORD | docker login --username $DOCKERHUB_USERNAME --password-stdin
-          IMAGE_NAME=${{ env.BITBUCKET_REPO_SLUG }}
+          echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
+          IMAGE_NAME=${{ secrets.BITBUCKET_REPO_SLUG }}
           VERSION="prod-0.1.${{ github.run_number }}"
-          IMAGE=${{ env.DOCKERHUB_NAMESPACE }}/${{ env.BITBUCKET_REPO_SLUG }}
+          IMAGE=${{ secrets.DOCKERHUB_NAMESPACE }}/${{ secrets.BITBUCKET_REPO_SLUG }}
           docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
           docker push "${IMAGE}:${VERSION}"
