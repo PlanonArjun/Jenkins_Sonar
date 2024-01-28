@@ -33,6 +33,6 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
-		      dockerfile: ./dockerfile
+          dockerfile: ./dockerfile
           push: true
-          tags: rekhugopal/testrepo:latest
+          tags: nileshsaxsena121290/automation-project:latest
