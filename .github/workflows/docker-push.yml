@@ -1,4 +1,4 @@
-name: Docker Push
+name: Build and Push Docker image to Docker Hub
 
 on:
   push:
@@ -6,44 +6,33 @@ on:
       - main
 
 jobs:
-  build:
+  push_to_registry:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
+      - name: Check out the repo
+        uses: actions/checkout@v3
+      
       - name: Set up JDK and Maven
         uses: actions/setup-java@v2
         with:
           distribution: 'adopt'
           java-version: '17'
-      
-      - name: Build and Test
-        run: mvn -B verify --file pom.xml
-      
-      - name: Security Scan
+
+      - name: Build with Maven
         run: mvn -B clean install
-      
-  docker-push:
-    needs: build
-    runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Login to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Set up Docker
-        uses: docker://dind
-
-      - name: Load Docker image
-        run: docker load --input "${{ github.workspace }}/${{ secrets.BITBUCKET_REPO_SLUG }}.tar"
-
-      - name: Push image to Docker Hub
-        run: |
-          echo ${{ secrets.DOCKERHUB_PASSWORD }} | docker login --username ${{ secrets.DOCKERHUB_USERNAME }} --password-stdin
-          IMAGE_NAME=${{ secrets.BITBUCKET_REPO_SLUG }}
-          VERSION="prod-0.1.${{ github.run_number }}"
-          IMAGE=${{ secrets.DOCKERHUB_NAMESPACE }}/${{ secrets.BITBUCKET_REPO_SLUG }}
-          docker tag "${IMAGE_NAME}" "${IMAGE}:${VERSION}"
-          docker push "${IMAGE}:${VERSION}"
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+		      dockerfile: ./dockerfile
+          push: true
+          tags: rekhugopal/testrepo:latest
